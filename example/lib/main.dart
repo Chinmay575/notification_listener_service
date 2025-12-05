@@ -22,6 +22,11 @@ class _MyAppState extends State<MyApp> {
 
   @override
   void initState() {
+    Future.delayed(Duration.zero, () async {
+      var s = await NotificationListenerService.getActiveNotifications();
+      events.addAll(s);
+      setState(() {});
+    });
     super.initState();
   }
 
@@ -78,6 +83,23 @@ class _MyAppState extends State<MyApp> {
                         _subscription?.cancel();
                       },
                       child: const Text("Stop Stream"),
+                    ),
+                    const SizedBox(height: 20.0),
+                    TextButton(
+                      onPressed: () async {
+                        final activeNotifications =
+                            await NotificationListenerService
+                                .getActiveNotifications();
+                        log("Active Notifications Count: ${activeNotifications.length}");
+                        for (var notif in activeNotifications) {
+                          log("Notification: ${notif.title} - Icon: ${notif.appIcon != null ? 'Has Icon' : 'No Icon'}");
+                        }
+                        setState(() {
+                          events.clear();
+                          events.addAll(activeNotifications);
+                        });
+                      },
+                      child: const Text("Get Active Notifications"),
                     ),
                   ],
                 ),

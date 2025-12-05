@@ -149,17 +149,63 @@ public class NotificationListener extends NotificationListenerService {
             Map<String, Object> notifData = new HashMap<>();
             Notification notification = sbn.getNotification();
             Bundle extras = notification.extras;
+            String packageName = sbn.getPackageName();
 
+            // Basic fields
             notifData.put("id", sbn.getId());
-            notifData.put("packageName", sbn.getPackageName());
+            notifData.put("packageName", packageName);
             notifData.put("title", extras.getCharSequence(Notification.EXTRA_TITLE) != null
                     ? extras.getCharSequence(Notification.EXTRA_TITLE).toString()
                     : null);
             notifData.put("content", extras.getCharSequence(Notification.EXTRA_TEXT) != null
                     ? extras.getCharSequence(Notification.EXTRA_TEXT).toString()
                     : null);
+            
+            // Check if notification is ongoing
             boolean isOngoing = (notification.flags & Notification.FLAG_ONGOING_EVENT) != 0;
             notifData.put("onGoing", isOngoing);
+            
+            // Check if notification can be replied to
+            Action action = NotificationUtils.getQuickReplyAction(notification, packageName);
+            notifData.put("canReply", action != null);
+            
+            // Cache the action for reply functionality
+            if (action != null) {
+                cachedNotifications.put(sbn.getId(), action);
+            }
+            
+            // Always set hasRemoved to false for active notifications
+            notifData.put("hasRemoved", false);
+            
+            // Check if notification has extra picture
+            boolean hasExtraPicture = extras.containsKey(Notification.EXTRA_PICTURE);
+            notifData.put("haveExtraPicture", hasExtraPicture);
+            
+            // Get app icon
+            byte[] appIcon = getAppIcon(packageName);
+            notifData.put("appIcon", appIcon);
+            
+            // Get large icon (API 23+)
+            if (Build.VERSION.SDK_INT >= VERSION_CODES.M) {
+                byte[] largeIcon = getNotificationLargeIcon(getApplicationContext(), notification);
+                notifData.put("largeIcon", largeIcon);
+            } else {
+                notifData.put("largeIcon", null);
+            }
+            
+            // Get extras picture if available
+            if (hasExtraPicture) {
+                Bitmap bmp = (Bitmap) extras.get(Notification.EXTRA_PICTURE);
+                if (bmp != null) {
+                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                    bmp.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                    notifData.put("notificationExtrasPicture", stream.toByteArray());
+                } else {
+                    notifData.put("notificationExtrasPicture", null);
+                }
+            } else {
+                notifData.put("notificationExtrasPicture", null);
+            }
 
             notificationList.add(notifData);
         }
