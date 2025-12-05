@@ -1,6 +1,5 @@
 package notification.listener.service;
 
-import static notification.listener.service.NotificationUtils.getBitmapFromDrawable;
 import static notification.listener.service.models.ActionCache.cachedNotifications;
 
 import android.annotation.SuppressLint;
@@ -9,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.Icon;
@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import androidx.annotation.RequiresApi;
+import androidx.annotation.*;
 
 import java.io.ByteArrayOutputStream;
 
@@ -62,7 +62,7 @@ public class NotificationListener extends NotificationListenerService {
         String packageName = notification.getPackageName();
         Bundle extras = notification.getNotification().extras;
         boolean isOngoing = (notification.getNotification().flags & Notification.FLAG_ONGOING_EVENT) != 0;
-        byte[] appIcon = getAppIcon(packageName);
+        byte[] appIcon = getAppIcon(this, packageName);
         byte[] largeIcon = null;
         Action action = NotificationUtils.getQuickReplyAction(notification.getNotification(), packageName);
 
@@ -106,18 +106,49 @@ public class NotificationListener extends NotificationListenerService {
         sendBroadcast(intent);
     }
 
-
-    public byte[] getAppIcon(String packageName) {
+    public byte[] getAppIcon(Context context, String packageName) {
         try {
-            PackageManager manager = getBaseContext().getPackageManager();
-            Drawable icon = manager.getApplicationIcon(packageName);
+            PackageManager manager = context.getPackageManager();
+            Drawable drawable = manager.getApplicationIcon(packageName);
+
+            // Convert Drawable to Bitmap safely (Handles Adaptive Icons)
+            Bitmap bitmap = getBitmapFromDrawable(drawable);
+
+            // Compress to Bytes
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            getBitmapFromDrawable(icon).compress(Bitmap.CompressFormat.PNG, 100, stream);
+
+            // PNG is best for icons (preserves transparency)
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+
             return stream.toByteArray();
+
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
-            return null;
+            return null; // Or return a default empty byte array
         }
+    }
+
+    // THE MISSING HELPER METHOD
+    private Bitmap getBitmapFromDrawable(Drawable drawable) {
+        // 1. If it's already a BitmapDrawable (older apps), just return the bitmap
+        if (drawable instanceof BitmapDrawable) {
+            return ((BitmapDrawable) drawable).getBitmap();
+        }
+
+        // 2. If it's an AdaptiveIconDrawable (Android 8+) or VectorDrawable,
+        // we must draw it onto a canvas.
+
+        // valid width/height checking
+        int width = drawable.getIntrinsicWidth() > 0 ? drawable.getIntrinsicWidth() : 1;
+        int height = drawable.getIntrinsicHeight() > 0 ? drawable.getIntrinsicHeight() : 1;
+
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+
+        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+        drawable.draw(canvas);
+
+        return bitmap;
     }
 
     @RequiresApi(api = VERSION_CODES.M)
@@ -182,7 +213,7 @@ public class NotificationListener extends NotificationListenerService {
             notifData.put("haveExtraPicture", hasExtraPicture);
             
             // Get app icon
-            byte[] appIcon = getAppIcon(packageName);
+            byte[] appIcon = getAppIcon(this, packageName);
             notifData.put("appIcon", appIcon);
             
             // Get large icon (API 23+)
