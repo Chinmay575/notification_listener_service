@@ -42,7 +42,7 @@ public class NotificationReceiver extends BroadcastReceiver {
         data.put("packageName", packageName);
         data.put("title", title);
         data.put("content", content);
-        data.put("notificationIcon", notificationIcon);
+        data.put("appIcon", notificationIcon);  // Changed from "notificationIcon" to "appIcon"
         data.put("notificationExtrasPicture", notificationExtrasPicture);
         data.put("haveExtraPicture", haveExtraPicture);
         data.put("largeIcon", largeIcon);

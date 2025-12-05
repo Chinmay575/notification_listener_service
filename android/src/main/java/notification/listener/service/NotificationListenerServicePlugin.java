@@ -5,15 +5,19 @@ import static notification.listener.service.NotificationUtils.isPermissionGrante
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.PendingIntent;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
 import android.provider.Settings;
 import android.util.Log;
-import android.content.ActivityNotFoundException;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
+
+import java.util.List;
+import java.util.Map;
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
@@ -26,11 +30,6 @@ import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry;
 import notification.listener.service.models.Action;
 import notification.listener.service.models.ActionCache;
-import android.annotation.SuppressLint;
-import android.os.Build;
-
-import java.util.List;
-import java.util.Map;
 
 public class NotificationListenerServicePlugin implements FlutterPlugin, ActivityAware, MethodCallHandler, PluginRegistry.ActivityResultListener, EventChannel.StreamHandler {
 
@@ -55,6 +54,7 @@ public class NotificationListenerServicePlugin implements FlutterPlugin, Activit
         eventChannel.setStreamHandler(this);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP_MR1)
     @Override
     public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
         pendingResult = result;
@@ -85,9 +85,11 @@ public class NotificationListenerServicePlugin implements FlutterPlugin, Activit
                 e.printStackTrace();
             }
         } else if (call.method.equals("getActiveNotifications")) {
-            NotificationListener service = NotificationListener.getInstance();
+            NotificationListener service = null;
+            service = NotificationListener.getInstance();
             if (service != null) {
-                List<Map<String, Object>> notifications = service.getActiveNotificationData();
+                List<Map<String, Object>> notifications = null;
+                notifications = service.getActiveNotificationData();
                 result.success(notifications);
             } else {
                 result.error("ServiceUnavailable", "NotificationService not running", null);
