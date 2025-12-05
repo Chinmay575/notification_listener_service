@@ -27,6 +27,9 @@ class ServiceNotificationEvent {
   /// notification package name
   String? packageName;
 
+  /// notification app name (human-readable application name)
+  String? appName;
+
   /// notification title
   String? title;
 
@@ -61,6 +64,7 @@ class ServiceNotificationEvent {
     this.hasRemoved,
     this.extrasPicture,
     this.packageName,
+    this.appName,
     this.title,
     this.appIcon,
     this.largeIcon,
@@ -75,6 +79,7 @@ class ServiceNotificationEvent {
     hasRemoved = map['hasRemoved'];
     extrasPicture = map['notificationExtrasPicture'];
     packageName = map['packageName'];
+    appName = map['appName'];
     title = map['title'];
     appIcon = map['appIcon'];
     largeIcon = map['largeIcon'];
@@ -102,6 +107,7 @@ class ServiceNotificationEvent {
       id: $id
       can reply: $canReply
       packageName: $packageName
+      appName: $appName
       title: $title
       content: $content
       hasRemoved: $hasRemoved

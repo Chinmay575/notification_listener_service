@@ -25,6 +25,7 @@ public class NotificationReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         String packageName = intent.getStringExtra(PACKAGE_NAME);
+        String appName = intent.getStringExtra(APP_NAME);
         String title = intent.getStringExtra(NOTIFICATION_TITLE);
         String content = intent.getStringExtra(NOTIFICATION_CONTENT);
         byte[] notificationIcon = intent.getByteArrayExtra(NOTIFICATIONS_ICON);
@@ -40,6 +41,7 @@ public class NotificationReceiver extends BroadcastReceiver {
         HashMap<String, Object> data = new HashMap<>();
         data.put("id", id);
         data.put("packageName", packageName);
+        data.put("appName", appName);
         data.put("title", title);
         data.put("content", content);
         data.put("appIcon", notificationIcon);  // Changed from "notificationIcon" to "appIcon"

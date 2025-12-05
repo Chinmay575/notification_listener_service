@@ -136,6 +136,16 @@ class _MyAppState extends State<MyApp> {
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          if (events[index].appName != null)
+                            Text(
+                              events[index].appName!,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          const SizedBox(height: 4.0),
                           Text(
                             events[index].content ?? "no content",
                             style: const TextStyle(fontWeight: FontWeight.bold),

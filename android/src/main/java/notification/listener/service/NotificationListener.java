@@ -60,6 +60,7 @@ public class NotificationListener extends NotificationListenerService {
     @RequiresApi(api = VERSION_CODES.KITKAT)
     private void handleNotification(StatusBarNotification notification, boolean isRemoved) {
         String packageName = notification.getPackageName();
+        String appName = getAppName(this, packageName);
         Bundle extras = notification.getNotification().extras;
         boolean isOngoing = (notification.getNotification().flags & Notification.FLAG_ONGOING_EVENT) != 0;
         byte[] appIcon = getAppIcon(this, packageName);
@@ -72,6 +73,7 @@ public class NotificationListener extends NotificationListenerService {
 
         Intent intent = new Intent(NotificationConstants.INTENT);
         intent.putExtra(NotificationConstants.PACKAGE_NAME, packageName);
+        intent.putExtra(NotificationConstants.APP_NAME, appName);
         intent.putExtra(NotificationConstants.ID, notification.getId());
         intent.putExtra(NotificationConstants.CAN_REPLY, action != null);
         intent.putExtra(NotificationConstants.IS_ONGOING, isOngoing);
@@ -151,6 +153,17 @@ public class NotificationListener extends NotificationListenerService {
         return bitmap;
     }
 
+    public String getAppName(Context context, String packageName) {
+        try {
+            PackageManager manager = context.getPackageManager();
+            android.content.pm.ApplicationInfo appInfo = manager.getApplicationInfo(packageName, 0);
+            return (String) manager.getApplicationLabel(appInfo);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+            return packageName; // Fallback to package name if app name not found
+        }
+    }
+
     @RequiresApi(api = VERSION_CODES.M)
     private byte[] getNotificationLargeIcon(Context context, Notification notification) {
         try {
@@ -185,6 +198,7 @@ public class NotificationListener extends NotificationListenerService {
             // Basic fields
             notifData.put("id", sbn.getId());
             notifData.put("packageName", packageName);
+            notifData.put("appName", getAppName(this, packageName));
             notifData.put("title", extras.getCharSequence(Notification.EXTRA_TITLE) != null
                     ? extras.getCharSequence(Notification.EXTRA_TITLE).toString()
                     : null);

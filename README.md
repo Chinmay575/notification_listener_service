@@ -71,6 +71,9 @@ The `ServiceNotificationEvent` provides:
   /// notification package name
   String? packageName;
 
+  /// notification app name (human-readable application name)
+  String? appName;
+
   /// notification title
   String? title;
 
